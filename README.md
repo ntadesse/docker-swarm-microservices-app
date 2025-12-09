@@ -1,14 +1,14 @@
 # Microservice Deployment on Docker Swarm
 
 ## Table of Contents
-1. DOCKER SWARM CLUSTER SETUP WITH MICROCEPH
-2. PORTAINER - CONTAINER MANAGEMENT
-3. MONITORING STACK - PROMETHEUS, GRAFANA, NODE EXPORTER, CADVISOR
-4. LOGGING STACK - EFK (ELASTICSEARCH, FLUENT-BIT, KIBANA)
-5. PRIVATE REGISTRY ARCHITECTURE (NEXUS + NGINX)
-6. SSL CERTIFICATE GENERATION AND TRUST SETUP
-7. MICROSERVICE - DOCKER CONTAINERIZATION
-8. DOCKER SWARM DEPLOYMENT PROCEDURE
+1. [Docker Swarm Cluster Setup with MicroCeph](#1-docker-swarm-cluster-setup-with-microceph)
+2. [Portainer - Container Management](#2-portainer---container-management)
+3. [Monitoring Stack - Prometheus, Grafana, Node Exporter, cAdvisor](#3-monitoring-stack---prometheus-grafana-node-exporter-cadvisor)
+4. [Logging Stack - EFK (Elasticsearch, Fluent-Bit, Kibana)](#4-logging-stack---efk-elasticsearch-fluent-bit-kibana)
+5. [Private Registry Architecture (Nexus + Nginx)](#5-private-registry-architecture-nexus--nginx)
+6. [SSL Certificate Generation and Trust Setup](#6-ssl-certificate-generation-and-trust-setup)
+7. [Microservice - Docker Containerization](#7-microservice---docker-containerization)
+8. [Docker Swarm Deployment Procedure](#8-docker-swarm-deployment-procedure)
 
 
 ## 1. Docker Swarm Cluster Setup with MicroCeph
