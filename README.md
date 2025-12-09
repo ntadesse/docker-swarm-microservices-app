@@ -1,8 +1,6 @@
-MICROSERVICE DEPLOYMENT ON DOCKER SWARM PROJECT
-=========================================
+# Microservice Deployment on Docker Swarm
 
-TABLE OF CONTENTS
------------------
+## Table of Contents
 1. DOCKER SWARM CLUSTER SETUP WITH MICROCEPH
 2. PORTAINER - CONTAINER MANAGEMENT
 3. MONITORING STACK - PROMETHEUS, GRAFANA, NODE EXPORTER, CADVISOR
@@ -13,11 +11,9 @@ TABLE OF CONTENTS
 8. DOCKER SWARM DEPLOYMENT PROCEDURE
 
 
-DOCKER SWARM CLUSTER SETUP WITH MICROCEPH
-=========================================
+## 1. Docker Swarm Cluster Setup with MicroCeph
 
-CLUSTER ARCHITECTURE
---------------------
+### Cluster Architecture
 - 5-Node Docker Swarm Cluster
 - 3 Manager+Worker Nodes (manager1, manager2, manager3)
 - 2 Worker Nodes (worker1, worker2)
@@ -25,8 +21,7 @@ CLUSTER ARCHITECTURE
 - MicroCeph distributed storage for shared volumes
 - CephFS mounted at /mnt/cephfs/ on all nodes
 
-ARCHITECTURE DIAGRAM
---------------------
+### Architecture Diagram
 
                     ┌────────────────────────────┐
                     │   REGISTRY VM (CentOS)     │
@@ -87,8 +82,7 @@ ARCHITECTURE DIAGRAM
               │  • Elasticsearch Data          │
               └────────────────────────────────┘
 
-COMPONENT FLOW:
----------------
+### Component Flow
 User → Nginx (Registry VM) → Nexus Registry → Docker Swarm
                                             ↓
                                    EmartApp Services (Workers)
@@ -97,24 +91,20 @@ User → Nginx (Registry VM) → Nexus Registry → Docker Swarm
                                             ↓
                                    CephFS Storage (All Nodes)
 
-MONITORING & LOGGING:
----------------------
+### Monitoring & Logging
 All Nodes → Node Exporter/cAdvisor → Prometheus → Grafana
 All Containers → Fluent-Bit → Elasticsearch → Kibana
 
-MANAGEMENT:
------------
+### Management
 Portainer (Manager1) → Docker Swarm API → All Services
 
-REGISTRY VM:
-------------
+### Registry VM
 Separate CentOS VM (192.168.58.30) running Nexus + Nginx
 Not part of Docker Swarm cluster
 Provides private Docker registry for all swarm nodes
 
 
-STEP 1: PREPARE NODES
---------------------
+### Step 1: Prepare Nodes
 # Provision VMs and install Docker Engine on all nodes
 # Option 1: Use Vagrant to create VMs and install Docker Engine
 # Option 2: Create VMs manually > Install Linux > Install Docker Engine
@@ -127,8 +117,7 @@ sudo snap refresh --hold microceph
 
 NB: If using Linux distribution other than Ubuntu, install snapd first
 
-STEP 2: INITIALIZE DOCKER SWARM
--------------------------------
+### Step 2: Initialize Docker Swarm
 # On manager1 (first manager node)
 docker swarm init --advertise-addr <manager1-ip>
 NB: Save the join tokens
@@ -149,8 +138,7 @@ docker swarm join --token <token> <manager1-ip>:2377
 docker node ls
 docker system info | grep -A 10 "Swarm:"
 
-STEP 3: SETUP MICROCEPH CLUSTER
--------------------------------
+### Step 3: Setup MicroCeph Cluster
 # On manager1 - Bootstrap MicroCeph cluster
 sudo microceph cluster bootstrap
 sudo microceph status
@@ -176,16 +164,14 @@ sudo microceph status
 sudo ceph status
 sudo ceph osd tree
 
-STEP 4: CREATE CEPHFS
----------------------
+### Step 4: Create CephFS
 # Create OSD pools and CephFS storage
 sudo ceph osd pool create cephfs_data 64
 sudo ceph osd pool create cephfs_metadata 64
 sudo ceph fs new cephfs cephfs_metadata cephfs_data
 sudo ceph fs ls
 
-STEP 5: MOUNT CEPHFS ON ALL NODES
----------------------------------
+### Step 5: Mount CephFS on All Nodes
 
 # Create mount point
 sudo mkdir -p /mnt/cephfs
@@ -206,16 +192,14 @@ sudo systemctl daemon-reload
 df -h | grep cephfs
 ls -la /mnt/cephfs
 
-STEP 6: PREPARE APPLICATION DIRECTORIES
---------------------------------------
+### Step 6: Prepare Application Directories
 # On any node (will be available on all nodes via CephFS)
 sudo mkdir -p /mnt/cephfs/mongodb/data
 sudo mkdir -p /mnt/cephfs/mysqldb/data
 sudo chown -R 999:999 /mnt/cephfs/mongodb/data
 sudo chown -R 999:999 /mnt/cephfs/mysqldb/data
 
-MICROCEPH ADVANTAGES
--------------------
+### MicroCeph Advantages
 - Simplified Ceph deployment and management
 - Automatic cluster formation and scaling
 - Built-in monitoring and health checks
@@ -224,8 +208,7 @@ MICROCEPH ADVANTAGES
 - Minimal configuration required
 - Self-healing and fault-tolerant storage
 
-CEPHFS BENEFITS FOR DOCKER SWARM
---------------------------------
+### CephFS Benefits for Docker Swarm
 - Shared storage accessible from all nodes
 - Persistent volumes survive node failures
 - Automatic replication and data protection
@@ -234,8 +217,7 @@ CEPHFS BENEFITS FOR DOCKER SWARM
 - POSIX-compliant filesystem interface
 - Built-in snapshots and backup capabilities
 
-MONITORING AND MAINTENANCE
--------------------------
+### Monitoring and Maintenance
 # Check cluster health
 sudo ceph health
 sudo microceph status
@@ -257,8 +239,7 @@ sudo ceph mds stat
 sudo ceph osd perf
 sudo ceph mds perf dump
 
-SECURITY CONSIDERATIONS
-----------------------
+### Security Considerations
 - CephFS provides built-in encryption at rest
 - Network traffic between Ceph nodes is authenticated
 - Access control through Ceph authentication system
@@ -266,19 +247,16 @@ SECURITY CONSIDERATIONS
 - Firewall rules for Ceph ports (6789, 6800-7300)
 
 
-PORTAINER - CONTAINER MANAGEMENT
-=================================
+## 2. Portainer - Container Management
 
-PORTAINER OVERVIEW
-------------------
+### Portainer Overview
 - Web-based container management UI
 - Manages Docker Swarm clusters
 - Provides visual interface for stacks, services, containers
 - Role-based access control (RBAC)
 - Real-time monitoring and logs
 
-INSTALL PORTAINER ON SWARM
---------------------------
+### Install Portainer on Swarm
 # Download Portainer stack file
 curl -L https://downloads.portainer.io/ce-lts/portainer-agent-stack.yml -o portainer-agent-stack.yml
 
@@ -302,8 +280,7 @@ https://<manager-node-ip>:9443
 # 2. Select "Docker Swarm" environment
 # 3. Connect to local Swarm cluster
 
-PORTAINER FEATURES
-------------------
+### Portainer Features
 - Stack deployment and management
 - Service scaling and updates
 - Container logs and console access
@@ -313,38 +290,31 @@ PORTAINER FEATURES
 - Webhook notifications
 
 
-MONITORING STACK - PROMETHEUS, GRAFANA, NODE EXPORTER, CADVISOR
-================================================================
+## 3. Monitoring Stack - Prometheus, Grafana, Node Exporter, cAdvisor
 
-MONITORING OVERVIEW
--------------------
+### Monitoring Overview
 - Prometheus: Metrics collection and storage
 - Grafana: Visualization and dashboards
 - Node Exporter: Host-level metrics (CPU, memory, disk, network)
 - cAdvisor: Container-level metrics (per container resource usage)
 
-DEPLOY MONITORING STACK VIA PORTAINER UI
------------------------------------------
+### Deploy Monitoring Stack via Portainer UI
 # Explore the link 'https://www.portainer.io/blog/docker-swarm-monitoring-tools' to install monitoring for Docker Swarm using Portainer UI
 
-MONITORING METRICS
-------------------
+### Monitoring Metrics
 - Node Exporter: CPU, memory, disk, network per host
 - cAdvisor: CPU, memory, network, filesystem per container
 - Docker Swarm: Service replicas, task states, node status
 
 
-LOGGING STACK - EFK (ELASTICSEARCH, FLUENT-BIT, KIBANA)
-========================================================
+## 4. Logging Stack - EFK (Elasticsearch, Fluent-Bit, Kibana)
 
-LOGGING OVERVIEW
-----------------
+### Logging Overview
 - Elasticsearch: Log storage and search engine
 - Fluent-Bit: Lightweight log collection and forwarding
 - Kibana: Log visualization and analysis
 
-DEPLOY EFK STACK ON DOCKER SWARM
----------------------------------
+### Deploy EFK Stack on Docker Swarm
 # Navigate to z_efk-docker directory
 cd z_efk-docker
 ls
@@ -361,8 +331,7 @@ docker stack deploy -c docker-compose.yml efk
 # Access Kibana UI:
 http://<manager-ip>:5601
 
-EFK FEATURES
-------------
+### EFK Features
 - Centralized log aggregation from all containers
 - Real-time log streaming and analysis
 - Full-text search across all logs
@@ -372,19 +341,16 @@ EFK FEATURES
 
 NB: Refer to z_efk-docker directory for complete configuration and deployment files
 
-PRIVATE REGISTRY ARCHITECTURE (NEXUS + NGINX)
-===================================================
+## 5. Private Registry Architecture (Nexus + Nginx)
 
-REGISTRY SETUP DETAILS
-----------------------
+### Registry Setup Details
 - Frontend: Nginx reverse proxy with SSL/TLS termination
 - Backend: Nexus Repository Manager (Docker registry format)
 - URL: https://<host-ip> (HTTPS only)
 - Authentication: Nexus user management system
 - SSL Certificates: Proper TLS configuration for secure access
 
-INSTALL NEXUS REPOSITORY MANAGER
----------------------------------
+### Install Nexus Repository Manager
 # Navigate to z_nexus directory
 cd z_nexus
 
@@ -414,8 +380,7 @@ sudo cat /opt/sonatype-work/nexus3/admin.password
 # 4. Create Docker (group) repository - Port: 8008
 # 5. Enable Docker Bearer Token Realm in Security settings and Push to Top, unless the docker login will fail
 
-NGINX CONFIGURATION FOR REGISTRY
---------------------------------
+### Nginx Configuration for Registry
 # Copy nexus.conf to nginx configuration directory
 sudo cp nexus.conf /etc/nginx/conf.d/nexus.conf
 
@@ -424,8 +389,7 @@ sudo nginx -t && sudo systemctl reload nginx
 
 NB: Refer to z_nexus directory for nexus.sh and nexus.conf files
 
-CONFIGURE DOCKER FOR PRIVATE REGISTRY
---------------------------------------
+### Configure Docker for Private Registry
 # Configure Docker daemon for HTTPS registry on all nodes
 vim /etc/docker/daemon.json
 {
@@ -444,8 +408,7 @@ docker login https://192.168.58.30
 # Verify registry access
 docker info | grep -A 5 "Registry Mirrors"
 
-SELINUX CONFIGURATION (RHEL/CentOS)
------------------------------------
+### SELinux Configuration (RHEL/CentOS)
 # Install semanage if not available
 sudo yum install -y policycoreutils-python-utils  # RHEL/CentOS 8+
 sudo yum install -y policycoreutils-python         # RHEL/CentOS 7
@@ -477,16 +440,14 @@ NB: The Nexus configuration is Port based
   : For RHEL/CentOS, configure SELinux as shown above
   : Refer to z_nexus directory for complete installation and configuration files
 
-NEXUS REPOSITORY CONFIGURATION
-------------------------------
+### Nexus Repository Configuration
 - Repository Type: Docker (hosted), Docker (Proxy) and Docker (group)
 - Docker Registry API: v2
 - Blob Store: File system or S3-compatible storage
 - Security: LDAP/Local user authentication
 - Cleanup Policies: Automated image cleanup and retention
 
-DOCKER CLIENT CONFIGURATION
----------------------------
+### Docker Client Configuration
 # Configure Docker daemon on all swarm nodes
 vim /etc/docker/daemon.json
 {
@@ -505,8 +466,7 @@ docker login 192.168.58.30
 # Verify login
 cat ~/.docker/config.json
 
-REGISTRY OPERATIONS
-------------------
+### Registry Operations
 # Build and tag for HTTPS registry
 docker build -t emartapp-client:latest ./client
 docker tag emartapp-client:latest 192.168.58.30/emartapp-client:latest
@@ -520,8 +480,7 @@ docker push 192.168.58.30/emartapp-client:latest
 docker push 192.168.58.30/emartapp-api:latest
 docker push 192.168.58.30/emartapp-webapi:latest
 
-SWARM DEPLOYMENT WITH HTTPS REGISTRY
-------------------------------------
+### Swarm Deployment with HTTPS Registry
 # Deploy stack with registry authentication
 docker stack deploy -c emart-stack.yml emart --with-registry-auth
 
@@ -531,8 +490,7 @@ docker stack deploy -c emart-stack.yml emart --with-registry-auth
 # - Proper authentication for private image access
 
 
-ADVANTAGES OF NEXUS + NGINX SETUP
----------------------------------
+### Advantages of Nexus + Nginx Setup
 - Enterprise-grade repository management
 - Multiple repository formats (Docker, Maven, npm, etc.)
 - Advanced security and access controls
@@ -543,11 +501,9 @@ ADVANTAGES OF NEXUS + NGINX SETUP
 - REST API for automation and monitoring
 
 
-SSL CERTIFICATE GENERATION AND TRUST SETUP
-===========================================
+## 6. SSL Certificate Generation and Trust Setup
 
-STEP 1: CREATE ROOT CERTIFICATE AUTHORITY (CA)
-----------------------------------------------
+### Step 1: Create Root Certificate Authority (CA)
 # Create CA directory structure
 mkdir -p /etc/ssl/ca/{certs,crl,newcerts,private}
 chmod 700 /etc/ssl/ca/private
@@ -561,8 +517,7 @@ chmod 400 /etc/ssl/ca/private/ca-key.pem
 # Create CA certificate
 openssl req -new -x509 -days 3650 -key /etc/ssl/ca/private/ca-key.pem -sha256 -out /etc/ssl/ca/certs/ca-cert.pem -subj "/C=US/ST=State/L=City/O=Organization/OU=IT Department/CN=Registry CA"
 
-STEP 2: GENERATE SERVER CERTIFICATE FOR REGISTRY
-------------------------------------------------
+### Step 2: Generate Server Certificate for Registry
 # Generate server private key
 openssl genrsa -out /etc/ssl/certs/registry-key.pem 4096
 
@@ -593,8 +548,7 @@ chmod 400 /etc/ssl/certs/registry-key.pem
 # Clean up temporary files
 rm /tmp/registry.csr /tmp/registry-extensions.cnf
 
-STEP 3: INSTALL CA CERTIFICATE ON ALL NODES
--------------------------------------------
+### Step 3: Install CA Certificate on All Nodes
 # Copy CA certificate to all swarm nodes
 scp /etc/ssl/ca/certs/ca-cert.pem user@<node>:/tmp/  
 
@@ -617,8 +571,7 @@ sudo systemctl restart docker
 curl -I https://<host-ip>
 
 
-STEP 4: VERIFY SSL CERTIFICATE SETUP
-------------------------------------
+### Step 4: Verify SSL Certificate Setup
 # Test certificate chain
 openssl s_client -connect 192.168.58.30:443 -servername 192.168.58.30 -showcerts
 
@@ -633,8 +586,7 @@ docker pull hello-world
 docker tag hello-world 192.168.58.30/hello-world:test
 docker push 192.168.58.30/hello-world:test
 
-CERTIFICATE VALIDATION COMMANDS
--------------------------------
+### Certificate Validation Commands
 # Check certificate expiration
 openssl x509 -in /etc/ssl/certs/registry-cert.pem -noout -dates
 
@@ -647,8 +599,7 @@ openssl x509 -in /etc/ssl/certs/registry-cert.pem -noout -subject -ext subjectAl
 # Test SSL connection
 openssl s_client -connect 192.168.58.30:443 -verify_return_error
 
-SECURITY BEST PRACTICES
------------------------
+### Security Best Practices
 - Use strong passwords for CA private key
 - Store CA private key securely (offline if possible)
 - Set appropriate file permissions (400 for private keys)
@@ -659,15 +610,12 @@ SECURITY BEST PRACTICES
 - Regular security audits of certificate infrastructure
 
 
-MICROSERVICE - DOCKER CONTAINERIZATION
-======================================
+## 7. Microservice - Docker Containerization
 
-PROJECT OVERVIEW
-----------------
+### Project Overview
 Multi-service e-commerce application with Angular frontend, Node.js API, Java API, MongoDB, MySQL, and Nginx reverse proxy.
 
-ARCHITECTURE
------------
+### Architecture
 - Angular Client (Port 4200) - Frontend UI
 - Node.js API (Port 5000) - User/shop operations, connects to MongoDB
 - Java API (Port 9000) - Books management, connects to MySQL
@@ -676,14 +624,12 @@ ARCHITECTURE
 - MySQL (Port 3306) - Books data storage
 - Custom Docker network: emart-network
 
-ROUTING CONFIGURATION
---------------------
+### Routing Configuration
 - http://localhost/ → Angular client
 - http://localhost/api/ → Node.js API
 - http://localhost/webapi/ → Java API
 
-DOCKERFILE OPTIMIZATIONS
-------------------------
+### Dockerfile Optimizations
 1. Client Dockerfile:
    - Multi-stage build with nginx
    - Copies Angular dist files to nginx html directory
@@ -698,23 +644,20 @@ DOCKERFILE OPTIMIZATIONS
    - Fixed hadolint warnings
    - Builds JAR file with Spring Boot
 
-NGINX CONFIGURATION
-------------------
+### Nginx Configuration
 - Reverse proxy with upstreams for each service
 - Security headers and rate limiting
 - Proper API path forwarding
 - Fixed proxy routing issues
 
-ENVIRONMENT VARIABLES (.env)
----------------------------
+### Environment Variables (.env)
 - MYSQL_ROOT_PASSWORD=emartdbpass
 - MYSQL_DATABASE=books
 - MONGO_INITDB_DATABASE=emartdb
 - NODE_ENV=production
 - JAVA_OPTS=-Xmx512m
 
-KEY FILES MODIFIED
------------------
+### Key Files Modified
 1. docker-compose.yaml - Service orchestration with health checks
 2. nginx/default.conf - Reverse proxy configuration
 3. client/Dockerfile - Angular build optimization
@@ -725,28 +668,24 @@ KEY FILES MODIFIED
 8. javaapi/src/main/resources/application.properties - Database configuration
 9. nodeapi/server.js - MongoDB connection with environment variables
 
-TESTING RESULTS
---------------
+### Testing Results
 - All services start successfully
 - Health checks pass for all services
 - API endpoints accessible through nginx proxy
 - Database connections working
 - Application accessible at http://localhost
 
-ACCESS PATTERNS
---------------
+### Access Patterns
 ✅ CORRECT: http://localhost (through nginx proxy)
 ❌ INCORRECT: http://localhost:4200 (bypasses proxy, API communication issues)
 
-TROUBLESHOOTING NOTES
---------------------
+### Troubleshooting Notes
 - Use nginx proxy (port 80) for full application access
 - Direct service access (ports 4200, 5000, 9000) bypasses proxy architecture
 - Health checks ensure service readiness before dependencies start
 - Environment variables provide flexible configuration
 
-COMMANDS FOR DEPLOYMENT
-----------------------
+### Commands for Deployment
 1. Build and start: docker compose up --build
 2. Start services: docker compose up -d
 3. Check status: docker compose ps
@@ -754,8 +693,7 @@ COMMANDS FOR DEPLOYMENT
 5. Stop services: docker compose down
 6. Rebuild specific service: docker compose build [service_name] --no-cache
 
-PERFORMANCE OPTIMIZATIONS
--------------------------
+### Performance Optimizations
 - Alpine-based images for smaller size
 - Multi-stage builds
 - Persistent volumes for data
@@ -763,19 +701,16 @@ PERFORMANCE OPTIMIZATIONS
 - Custom network for service communication
 - Environment-based configuration
 
-SECURITY IMPROVEMENTS
---------------------
+### Security Improvements
 - Externalized database credentials
 - Security headers in nginx
 - Rate limiting
 - No hardcoded passwords in code
 
 
-DOCKER SWARM DEPLOYMENT PROCEDURE
-=================================
+## 8. Docker Swarm Deployment Procedure
 
-STEP 1: BUILD AND PUSH IMAGES TO PRIVATE REGISTRY
--------------------------------------------------
+### Step 1: Build and Push Images to Private Registry
 # Build images locally using docker-compose
 docker compose build
 
@@ -795,34 +730,29 @@ docker push 192.168.58.30/mongo:4
 docker push 192.168.58.30/mysql:8.0.33
 docker push 192.168.58.30/nginx:1.21
 
-STEP 2: PREPARE SWARM ENVIRONMENT
----------------------------------
+### Step 2: Prepare Swarm Environment
 # Create Persistance Volume for Databases
 sudo mkdir -p /mnt/cephfs/mongodb/data
 sudo mkdir -p /mnt/cephfs/mysqldb/data
 sudo chown -R 999:999 /mnt/cephfs/mongodb/data
 sudo chown -R 999:999 /mnt/cephfs/mysqldb/data
 
-STEP 3: CREATE DOCKER SECRETS
------------------------------
+### Step 3: Create Docker Secrets
 # Create MySQL password secret
 echo "emartdbpass" | docker secret create mysql_password -
 docker secret ls
 
-STEP 4: CREATE DOCKER CONFIGS
------------------------------
+### Step 4: Create Docker Configs
 # Create nginx configuration
 docker config create nginx_config ./nginx/default.conf
 docker config ls
 
-STEP 5: DEPLOY STACK
--------------------
+### Step 5: Deploy Stack
 # Deploy the stack with registry authentication
 docker stack deploy -c emart-stack.yml emart --with-registry-auth
 # Note: --with-registry-auth is required for private registry access
 
-STEP 6: VERIFY DEPLOYMENT
-------------------------
+### Step 6: Verify Deployment
 # Check stack services
 docker stack ls
 docker stack services emart
@@ -843,13 +773,11 @@ docker service logs emart_webapi --tail 20
 docker service logs emart_emongo --tail 20
 docker service logs emart_mysqldb --tail 20
 
-STEP 7: ACCESS APPLICATION
--------------------------
+### Step 7: Access Application
 # Application accessible through any node in the swarm
 http://<any-node-ip>:80
 
-TROUBLESHOOTING COMMANDS
------------------------
+### Troubleshooting Commands
 # Force update a service (useful for network issues)
 docker service update --force <service>
 docker service scale <service>=5
@@ -857,8 +785,7 @@ docker service scale <service>=5
 docker stack rm emart
 docker stack deploy -c emart-stack.yml emart --with-registry-auth
 
-STACK FILE CONFIGURATION (emart-stack.yml)
-------------------------------------------
+### Stack File Configuration (emart-stack.yml)
 Key differences from docker-compose.yaml:
 - Uses overlay networks for multi-node communication
 - Implements placement constraints for databases (manager nodes only)
