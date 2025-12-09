@@ -1,17 +1,59 @@
 # Microservice Deployment on Docker Swarm
 
 ## Table of Contents
-1. [Docker Swarm Cluster Setup with MicroCeph](#1-docker-swarm-cluster-setup-with-microceph)
-2. [Portainer - Container Management](#2-portainer---container-management)
-3. [Monitoring Stack - Prometheus, Grafana, Node Exporter, cAdvisor](#3-monitoring-stack---prometheus-grafana-node-exporter-cadvisor)
-4. [Logging Stack - EFK (Elasticsearch, Fluent-Bit, Kibana)](#4-logging-stack---efk-elasticsearch-fluent-bit-kibana)
-5. [Private Registry Architecture (Nexus + Nginx)](#5-private-registry-architecture-nexus--nginx)
-6. [SSL Certificate Generation and Trust Setup](#6-ssl-certificate-generation-and-trust-setup)
-7. [Microservice - Docker Containerization](#7-microservice---docker-containerization)
-8. [Docker Swarm Deployment Procedure](#8-docker-swarm-deployment-procedure)
+1. [Tools and Technologies](#1-tools-and-technologies)
+2. [Docker Swarm Cluster Setup with MicroCeph](#2-docker-swarm-cluster-setup-with-microceph)
+3. [Portainer - Container Management](#3-portainer---container-management)
+4. [Monitoring Stack - Prometheus, Grafana, Node Exporter, cAdvisor](#4-monitoring-stack---prometheus-grafana-node-exporter-cadvisor)
+5. [Logging Stack - EFK (Elasticsearch, Fluent-Bit, Kibana)](#5-logging-stack---efk-elasticsearch-fluent-bit-kibana)
+6. [Private Registry Architecture (Nexus + Nginx)](#6-private-registry-architecture-nexus--nginx)
+7. [SSL Certificate Generation and Trust Setup](#7-ssl-certificate-generation-and-trust-setup)
+8. [Microservice - Docker Containerization](#8-microservice---docker-containerization)
+9. [Docker Swarm Deployment Procedure](#9-docker-swarm-deployment-procedure)
 
 
-## 1. Docker Swarm Cluster Setup with MicroCeph
+## 1. Tools and Technologies
+### Container Orchestration
+- **Docker Swarm** - Native Docker clustering and orchestration
+- **Docker Engine** - Container runtime
+
+### Storage
+- **MicroCeph** - Simplified Ceph deployment
+- **CephFS** - Distributed filesystem for shared storage
+
+### Application Stack
+- **Angular** - Frontend framework
+- **Node.js** - Backend API (User/Shop operations)
+- **Java (Spring Boot)** - Backend API (Books management)
+- **Nginx** - Reverse proxy and load balancer
+- **MongoDB** - NoSQL database for user data
+- **MySQL** - Relational database for books data
+
+### Registry & Security
+- **Nexus Repository Manager** - Private Docker registry
+- **Nginx** - SSL/TLS termination for registry
+- **OpenSSL** - Certificate generation and management
+
+### Monitoring
+- **Prometheus** - Metrics collection and storage
+- **Grafana** - Visualization and dashboards
+- **Node Exporter** - Host-level metrics
+- **cAdvisor** - Container-level metrics
+
+### Logging
+- **Elasticsearch** - Log storage and search
+- **Fluent-Bit** - Lightweight log collector
+- **Kibana** - Log visualization and analysis
+
+### Management
+- **Portainer** - Web-based container management UI
+
+### Infrastructure
+- **Vagrant** - VM provisioning (optional)
+- **Ubuntu/CentOS** - Linux distributions
+
+
+## 2. Docker Swarm Cluster Setup with MicroCeph
 
 ### Cluster Architecture
 - 5-Node Docker Swarm Cluster
@@ -249,7 +291,7 @@ sudo ceph mds perf dump
 - Firewall rules for Ceph ports (6789, 6800-7300)
 
 
-## 2. Portainer - Container Management
+## 3. Portainer - Container Management
 
 ### Portainer Overview
 - Web-based container management UI
@@ -292,7 +334,7 @@ https://<manager-node-ip>:9443
 - User and team management
 - Webhook notifications
 
-## 3. Monitoring Stack - Prometheus, Grafana, Node Exporter, cAdvisor
+## 4. Monitoring Stack - Prometheus, Grafana, Node Exporter, cAdvisor
 ### Monitoring Overview
 - Prometheus: Metrics collection and storage
 - Grafana: Visualization and dashboards
@@ -307,7 +349,7 @@ To install monitoring for Docker Swarm using Portainer UI, explore the link:
 - cAdvisor: CPU, memory, network, filesystem per container
 - Docker Swarm: Service replicas, task states, node status
 
-## 4. Logging Stack - EFK (Elasticsearch, Fluent-Bit, Kibana)
+## 5. Logging Stack - EFK (Elasticsearch, Fluent-Bit, Kibana)
 ### Logging Overview
 - Elasticsearch: Log storage and search engine
 - Fluent-Bit: Lightweight log collection and forwarding
@@ -340,7 +382,7 @@ NB: Refer to z_efk-docker directory for complete configuration and deployment fi
 - Log retention and archiving
 - Alert on log patterns
 
-## 5. Private Registry Architecture (Nexus + Nginx)
+## 6. Private Registry Architecture (Nexus + Nginx)
 ### Registry Setup Details
 - Frontend: Nginx reverse proxy with SSL/TLS termination
 - Backend: Nexus Repository Manager (Docker registry format)
@@ -498,7 +540,7 @@ docker stack deploy -c emart-stack.yml emart --with-registry-auth
 - REST API for automation and monitoring
 
 
-## 6. SSL Certificate Generation and Trust Setup
+## 7. SSL Certificate Generation and Trust Setup
 ```bash
 ### Step 1: Create Root Certificate Authority (CA)
 # Create CA directory structure
@@ -606,7 +648,7 @@ openssl s_client -connect <host-ip>:443 -verify_return_error
 - Enable HSTS and security headers
 - Regular security audits of certificate infrastructure
 
-## 7. Microservice - Docker Containerization
+## 8. Microservice - Docker Containerization
 ### Project Overview
 Multi-service e-commerce application with Angular frontend, Node.js API, Java API, MongoDB, MySQL, and Nginx reverse proxy.
 
@@ -703,7 +745,7 @@ Multi-service e-commerce application with Angular frontend, Node.js API, Java AP
 - No hardcoded passwords in code
 
 
-## 8. Docker Swarm Deployment Procedure
+## 9. Docker Swarm Deployment Procedure
 ```bash
 ### Step 1: Build and Push Images to Private Registry
 # Build images locally using docker-compose
