@@ -252,7 +252,7 @@ mkdir -p /mnt/cephfs/portainer_data
 # Deploy Portainer stack
 docker stack deploy -c portainer-agent-stack.yml portainer
 
-NB: Adjust network and volume settings in portainer-agent-stack.yml as needed for your cluster 
+**Note:** Adjust network and volume settings in portainer-agent-stack.yml as needed for your cluster 
 
 # Verify Portainer deployment
 docker service ls | grep portainer
@@ -313,7 +313,7 @@ docker stack deploy -c docker-compose.yml efk
 
 # Access Kibana UI:
 http://<manager-ip>:5601
-NB: Refer to z_efk-docker directory for complete configuration and deployment files
+**Note:** Refer to z_efk-docker directory for complete configuration and deployment files
 ```
 ### EFK Features
 - Centralized log aggregation from all containers
@@ -371,7 +371,7 @@ sudo cp nexus.conf /etc/nginx/conf.d/nexus.conf
 # Reload Nginx
 sudo nginx -t && sudo systemctl reload nginx
 
-NB: Refer to z_nexus directory for nexus.sh and nexus.conf files
+**Note:** Refer to z_nexus directory for nexus.sh and nexus.conf files
 
 ### Configure Docker for Private Registry
 # Configure Docker daemon for HTTPS registry on all nodes
@@ -420,10 +420,7 @@ sudo vim /etc/selinux/config
 getenforce
 sestatus
 
-NB: The Nexus configuration is Port based
-  : If you only have Linux machines you can use path based, but Windows machines don't support push/pull in path based nexus configuration
-  : For RHEL/CentOS, configure SELinux as shown above
-  : Refer to z_nexus directory for complete installation and configuration files
+**Note:** The Nexus configuration is Port based. If you only have Linux machines you can use path based, but Windows machines don't support push/pull in path based nexus configuration. For RHEL/CentOS, configure SELinux as shown above. Refer to z_nexus directory for complete installation and configuration files
 ```
 ### Nexus Repository Configuration
 - Repository Type: Docker (hosted), Docker (Proxy) and Docker (group)
@@ -691,6 +688,8 @@ Multi-service e-commerce application with Angular frontend, Node.js API, Java AP
 ### Step 1: Build and Push Images to Private Registry
 # Build images locally using docker-compose
 docker compose build
+
+**Note:** You can build each image separately, but I use docker compose to do all at once
 
 # Tag images for private registry
 docker tag emartapp-client:latest <host-ip>/emartapp-client:latest
