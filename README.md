@@ -105,13 +105,13 @@ Provides private Docker registry for all swarm nodes
 
 
 ### Step 1: Prepare Nodes
-###### Provision VMs and install Docker Engine on all nodes
+#### Provision VMs and install Docker Engine on all nodes
 ###### Option 1: Use Vagrant to create VMs and install Docker Engine
 ###### Option 2: Create VMs manually > Install Linux > Install Docker Engine
 
 NB: If you want to change Linux distribution, find box on Vagrant Cloud
 
-# Install MicroCeph on all nodes
+#### Install MicroCeph on all nodes
 sudo snap install microceph --channel=latest/stable
 sudo snap refresh --hold microceph
 
