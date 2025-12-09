@@ -321,10 +321,8 @@ https://<manager-node-ip>:9443
 - cAdvisor: Container-level metrics (per container resource usage)
 
 ### Deploy Monitoring Stack via Portainer UI
-#### To install monitoring for Docker Swarm using Portainer UI explore the link 
-```bash 
-https://www.portainer.io/blog/docker-swarm-monitoring-tools' 
-```
+To install monitoring for Docker Swarm using Portainer UI, explore the link:
+[Docker Swarm Monitoring Tools](https://www.portainer.io/blog/docker-swarm-monitoring-tools)
 ### Monitoring Metrics
 - Node Exporter: CPU, memory, disk, network per host
 - cAdvisor: CPU, memory, network, filesystem per container
