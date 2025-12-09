@@ -1,0 +1,37 @@
+version: '3.2'
+
+services:
+  agent:
+    image: portainer/agent:lts
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # Mount the local host's docker socket
+    networks:
+      - agent_network
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.platform.os == linux]
+
+  portainer:
+    image: portainer/portainer-ce:lts
+    command: -H tcp://tasks.agent:9001 --tlsskipverify
+    ports:
+      - "9443:9443"
+#     - "9000:9000"
+      - "8000:8000"
+    volumes:
+      - type: bind
+        source: /mnt/cephfs/portainer_data # This path must exist on the manager node
+        target: /data
+    networks:
+      - agent_network
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+
+networks:
+  agent_network:
+    driver: overlay
+    attachable: true

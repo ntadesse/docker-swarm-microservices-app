@@ -1,0 +1,120 @@
+version: "3.8"
+
+services:
+  client:
+    build:
+      context: ./client
+    ports:
+      - "4200:4200"
+    container_name: client
+    networks:
+      - emart-network
+
+  api:
+    build:
+      context: ./nodeapi
+    ports:
+      - "5000:5000"
+    restart: always
+    container_name: api
+    depends_on:
+      emongo:
+        condition: service_healthy
+    networks:
+      - emart-network
+    environment:
+      - MONGO_URL=mongodb://emongo:27017/${MONGO_INITDB_DATABASE}
+      - NODE_ENV=${NODE_ENV}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  webapi:
+    build:
+      context: ./javaapi
+    ports:
+      - "9000:9000"
+    restart: always
+    container_name: webapi
+    depends_on:
+      emartdb:
+        condition: service_healthy
+    networks:
+      - emart-network
+    environment:
+      - DB_HOST=emartdb
+      - DB_PORT=3306
+      - DB_NAME=${MYSQL_DATABASE}
+      - DB_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - JAVA_OPTS=${JAVA_OPTS}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/webapi/books"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+
+  nginx:
+    restart: always
+    image: nginx:1.21
+    container_name: nginx
+    volumes:
+      - "./nginx/default.conf:/etc/nginx/conf.d/default.conf"
+    ports:
+      - "80:80"
+    depends_on:
+      - client
+      - api
+      - webapi
+    networks:
+      - emart-network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  emongo:
+    image: mongo:4
+    container_name: emongo
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - emart-network
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  emartdb:
+    image: mysql:8.0.33
+    container_name: emartdb
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - emart-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mongo-data:
+  mysql-data:
+
+networks:
+  emart-network:
+    driver: bridge

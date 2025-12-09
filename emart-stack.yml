@@ -1,0 +1,202 @@
+version: '3.8'
+services:
+  # Frontend - Angular Client
+  client:
+    image: 192.168.58.30/emartapp-client:latest
+    ports:
+      - "4200:4200"
+    networks:
+      - emart-frontend
+      - emart-backend
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+    depends_on:
+      - api
+      - webapi
+
+  # Node.js API Service
+  api:
+    image: 192.168.58.30/emartapp-api:latest
+    ports:
+      - "5000:5000"
+    networks:
+      - emart-backend
+    environment:
+      - NODE_ENV=production
+      - MONGO_URL=mongodb://emongo:27017/epoc
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+      update_config:
+        parallelism: 1
+        delay: 15s
+        failure_action: rollback
+    depends_on:
+      - emongo
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Java API Service
+  webapi:
+    image: 192.168.58.30/emartapp-webapi:latest
+    ports:
+      - "9000:9000"
+    networks:
+      - emart-backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=production
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/books?allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD_FILE=/run/secrets/mysql_password
+    secrets:
+      - mysql_password
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+    depends_on:
+      - mysqldb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/webapi/books"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # API Gateway - Nginx
+  nginx:
+    image: 192.168.58.30/nginx:1.21
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - emart-frontend
+      - emart-backend
+    configs:
+      - source: nginx_config
+        target: /etc/nginx/conf.d/default.conf
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      placement:
+        constraints:
+          - node.role == manager
+    depends_on:
+      - client
+      - api
+      - webapi
+
+  # MongoDB Database
+  emongo:
+    image: 192.168.58.30/mongo:4
+    networks:
+      - emart-backend
+    environment:
+      - MONGO_INITDB_DATABASE=epoc
+    volumes:
+      - mongo_data:/data/db
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == manager
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # MySQL Database
+  mysqldb:
+    image: 192.168.58.30/mysql:8.0.33
+    networks:
+      - emart-backend
+    environment:
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_password
+      - MYSQL_DATABASE=books
+    secrets:
+      - mysql_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == manager
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+# Networks
+networks:
+  emart-frontend:
+    driver: overlay
+    attachable: true
+  emart-backend:
+    driver: overlay
+    attachable: true
+
+# Volumes
+volumes:
+  mongo_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/cephfs/mongodb/data
+  mysql_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/cephfs/mysqldb/data
+
+# Secrets
+secrets:
+  mysql_password:
+    external: true
+
+# Configs
+configs:
+  nginx_config:
+    external: true

@@ -1,0 +1,38 @@
+[SERVICE]
+    Flush     5
+    Daemon    off
+    Http_server on
+    Log_level info
+    Parsers_file /fluent-bit/etc/parsers.conf
+
+[INPUT]
+    Name   forward
+    Listen 0.0.0.0
+    Port   24224
+
+[INPUT]
+    Name              tail
+    Path              /var/lib/docker/containers/*/*.log
+    Parser            docker
+    Tag               docker.*
+    Refresh_Interval  5
+    Rotate_Wait       30
+    Mem_Buf_Limit     5MB
+    Skip_Long_Lines   On
+
+[FILTER]
+    Name parser
+    Match *
+    Key_Name log
+    Parser json
+    Reserve_data true
+
+[OUTPUT]
+    Name            es
+    Match           *
+    Host            elasticsearch
+    Port            9200
+    Replace_dots    on
+    Retry_limit     false
+    Logstash_format on
+    Logstash_prefix fluent-bit

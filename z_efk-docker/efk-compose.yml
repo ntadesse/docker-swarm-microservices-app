@@ -1,0 +1,95 @@
+version: "3.8"
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 2g
+    environment:
+      - cluster.name=efk-logging-stack
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      # Security disabled: NO TOKEN REQUIRED with these settings
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - /mnt/cephfs/elasticsearch_data:/usr/share/elasticsearch/data:rw
+    networks:
+      - efk-backend
+    logging:
+      driver: json-file
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.0
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          # FIXED: 256m is too small for Kibana 8.x, it will crash immediately.
+          memory: 1g 
+    environment:
+      # FIXED: using http because you disabled security in Elasticsearch
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    # FIXED: Added healthcheck to prevent Swarm from killing it during slow startup
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -I http://localhost:5601 | grep -q 'HTTP/1.1 200 OK'"]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+      start_period: 120s
+    ports:
+      - "5601:5601"
+    networks:
+      - efk-backend
+    logging:
+      driver: json-file
+
+  fluent-bit:
+    image: fluent/fluent-bit:3.1
+    # FIXED: Fluent Bit often needs root to read /var/lib/docker/containers logs
+    user: root
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+    command:
+      - /fluent-bit/bin/fluent-bit
+      - -c
+      - /fluent-bit/etc/fluent-bit.conf
+    ports:
+      - "24224:24224/tcp"
+      - "2020:2020"
+    volumes:
+      # NOTE: These files must exist on ALL nodes (workers too) or this service will fail.
+      - /home/vagrant/efk-docker/conf/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - /home/vagrant/efk-docker/conf/parsers.conf:/fluent-bit/etc/parsers.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/log:/var/log:ro
+    networks:
+      - efk-backend
+    logging:
+      driver: json-file
+
+networks:
+  efk-backend:
+    driver: overlay
+    attachable: true

@@ -1,0 +1,25 @@
+# Environment variables
+.env
+
+# Docker
+.dockerignore
+
+# Logs
+*.log
+logs/
+
+# Node modules
+node_modules/
+npm-debug.log*
+
+# Java
+target/
+*.jar
+*.war
+*.class
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
