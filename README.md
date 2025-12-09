@@ -105,22 +105,30 @@ Provides private Docker registry for all swarm nodes
 
 
 ### Step 1: Prepare Nodes
-#### Provision VMs and install Docker Engine on all nodes
-###### Option 1: Use Vagrant to create VMs and install Docker Engine
-###### Option 2: Create VMs manually > Install Linux > Install Docker Engine
+```bash
+# Provision VMs and install Docker Engine on all nodes
+# Option 1: Use Vagrant to create VMs and install Docker Engine
+# Option 2: Create VMs manually > Install Linux > Install Docker Engine
+```
 
-NB: If you want to change Linux distribution, find box on Vagrant Cloud
+**Note:** If you want to change Linux distribution, find box on Vagrant Cloud
 
-#### Install MicroCeph on all nodes
+```bash
+# Install MicroCeph on all nodes
 sudo snap install microceph --channel=latest/stable
 sudo snap refresh --hold microceph
+```
 
-NB: If using Linux distribution other than Ubuntu, install snapd first
+**Note:** If using Linux distribution other than Ubuntu, install snapd first
 
 ### Step 2: Initialize Docker Swarm
+```bash
 # On manager1 (first manager node)
 docker swarm init --advertise-addr <manager1-ip>
-NB: Save the join tokens
+```
+**Note:** Save the join tokens
+
+```bash
 
 # On manager2 and manager3
 docker swarm join --token <token> <manager1-ip>:2377
@@ -128,21 +136,28 @@ docker swarm join --token <token> <manager1-ip>:2377
 # Promote to manager (run on manager1)
 docker node promote <manager2-hostname>
 docker node promote <manager3-hostname>
+```
 
-NB: By default, nodes join as workers
+**Note:** By default, nodes join as workers
 
+```bash
 # On worker1 and worker2
 docker swarm join --token <token> <manager1-ip>:2377
 
 # Verify cluster
 docker node ls
 docker system info | grep -A 10 "Swarm:"
+```
 
 ### Step 3: Setup MicroCeph Cluster
+```bash
 # On manager1 - Bootstrap MicroCeph cluster
 sudo microceph cluster bootstrap
 sudo microceph status
-NB: Use --public-network, --cluster-network, or --microceph-ip options to specify a specific interface
+```
+**Note:** Use --public-network, --cluster-network, or --microceph-ip options to specify a specific interface
+
+```bash
 # Add disks to Ceph (example with /dev/sdb)
 sudo lsblk
 sudo microceph disk add /dev/sdb /dev/sdc --wipe
@@ -163,16 +178,19 @@ sudo microceph disk add /dev/sdb /dev/sdc --wipe
 sudo microceph status
 sudo ceph status
 sudo ceph osd tree
+```
 
 ### Step 4: Create CephFS
+```bash
 # Create OSD pools and CephFS storage
 sudo ceph osd pool create cephfs_data 64
 sudo ceph osd pool create cephfs_metadata 64
 sudo ceph fs new cephfs cephfs_metadata cephfs_data
 sudo ceph fs ls
+```
 
 ### Step 5: Mount CephFS on All Nodes
-
+```bash
 # Create mount point
 sudo mkdir -p /mnt/cephfs
 
@@ -191,13 +209,16 @@ sudo systemctl daemon-reload
 # Verify mount
 df -h | grep cephfs
 ls -la /mnt/cephfs
+```
 
 ### Step 6: Prepare Application Directories
+```bash
 # On any node (will be available on all nodes via CephFS)
 sudo mkdir -p /mnt/cephfs/mongodb/data
 sudo mkdir -p /mnt/cephfs/mysqldb/data
 sudo chown -R 999:999 /mnt/cephfs/mongodb/data
 sudo chown -R 999:999 /mnt/cephfs/mysqldb/data
+```
 
 ### MicroCeph Advantages
 - Simplified Ceph deployment and management
@@ -218,6 +239,7 @@ sudo chown -R 999:999 /mnt/cephfs/mysqldb/data
 - Built-in snapshots and backup capabilities
 
 ### Monitoring and Maintenance
+```bash
 # Check cluster health
 sudo ceph health
 sudo microceph status
@@ -238,6 +260,7 @@ sudo ceph mds stat
 # Monitor performance
 sudo ceph osd perf
 sudo ceph mds perf dump
+```
 
 ### Security Considerations
 - CephFS provides built-in encryption at rest
@@ -257,6 +280,7 @@ sudo ceph mds perf dump
 - Real-time monitoring and logs
 
 ### Install Portainer on Swarm
+```bash
 # Download Portainer stack file
 curl -L https://downloads.portainer.io/ce-lts/portainer-agent-stack.yml -o portainer-agent-stack.yml
 
