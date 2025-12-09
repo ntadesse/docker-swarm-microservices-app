@@ -474,20 +474,33 @@ NB: The Nexus configuration is Port based
 
 ### Registry Operations
 ```bash
-# Build and tag for HTTPS registry
+# Build and tag for HTTPS registry (Port 443)
 docker build -t emartapp-client:latest ./client
-docker tag emartapp-client:latest <host-ip>/emartapp-client:latest
+docker tag emartapp-client:latest <host-ip>:443/emartapp-client:latest
 docker build -t emartapp-api:latest ./nodeapi
-docker tag emartapp-api:latest <host-ip>/emartapp-api:latest
+docker tag emartapp-api:latest <host-ip>:443/emartapp-api:latest
 docker build -t emartapp-webapi:latest ./javaapi
-docker tag emartapp-webapi:latest <host-ip>/emartapp-webapi:latest
+docker tag emartapp-webapi:latest <host-ip>:443/emartapp-webapi:latest
 
-# Push to HTTPS registry
-docker push <host-ip>/emartapp-client:latest
-docker push <host-ip>/emartapp-api:latest
-docker push <host-ip>/emartapp-webapi:latest
+# Push to HTTPS registry (Port 443)
+docker push <host-ip>:443/emartapp-client:latest
+docker push <host-ip>:443/emartapp-api:latest
+docker push <host-ip>:443/emartapp-webapi:latest
+
+# Pull images through Docker proxy (Port 488 via Nginx → Nexus 8009)
+# The proxy automatically caches images from Docker Hub
+docker pull <host-ip>:488/nginx:latest
+docker pull <host-ip>:488/mysql:8.0.33
+docker pull <host-ip>:488/mongo:4
+
+# Pull from Docker group registry (Port 8008)
+# Combines hosted and proxy repositories
+docker pull <host-ip>:8008/emartapp-client:latest
+docker pull <host-ip>:8008/library/nginx:latest
+```
 
 ### Swarm Deployment with HTTPS Registry
+```bash
 # Deploy stack with registry authentication
 docker stack deploy -c emart-stack.yml emart --with-registry-auth
 
