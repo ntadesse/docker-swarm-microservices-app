@@ -496,7 +496,7 @@ docker pull <host-ip>:488/mongo:4
 # Pull from Docker group registry (Port 8008)
 # Combines hosted and proxy repositories
 docker pull <host-ip>:8008/emartapp-client:latest
-docker pull <host-ip>:8008/library/nginx:latest
+docker pull <host-ip>:8008/nginx:latest
 ```
 
 ### Swarm Deployment with HTTPS Registry
