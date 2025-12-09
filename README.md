@@ -26,7 +26,7 @@
 ```
                     ┌────────────────────────────┐
                     │   REGISTRY VM (CentOS)     │
-                    │   192.168.58.30            │
+                    │   <host-ip>            │
                     │                            │
                     │  ┌──────────────────────┐  │
                     │  │   Nexus Repository   │  │
@@ -101,7 +101,7 @@ All Containers → Fluent-Bit → Elasticsearch → Kibana
 Portainer (Manager1) → Docker Swarm API → All Services
 
 ### Registry VM
-Separate CentOS VM (192.168.58.30) running Nexus + Nginx
+Separate CentOS VM (<host-ip>) running Nexus + Nginx
 Not part of Docker Swarm cluster
 Provides private Docker registry for all swarm nodes
 
@@ -425,7 +425,7 @@ vim /etc/docker/daemon.json
 sudo systemctl restart docker
 
 # Login to private registry (required for push/pull)
-docker login https://192.168.58.30
+docker login https://<host-ip>
 # Username: <nexus-username>
 # Password: <nexus-password>
 
@@ -476,16 +476,16 @@ NB: The Nexus configuration is Port based
 ```bash
 # Build and tag for HTTPS registry
 docker build -t emartapp-client:latest ./client
-docker tag emartapp-client:latest 192.168.58.30/emartapp-client:latest
+docker tag emartapp-client:latest <host-ip>/emartapp-client:latest
 docker build -t emartapp-api:latest ./nodeapi
-docker tag emartapp-api:latest 192.168.58.30/emartapp-api:latest
+docker tag emartapp-api:latest <host-ip>/emartapp-api:latest
 docker build -t emartapp-webapi:latest ./javaapi
-docker tag emartapp-webapi:latest 192.168.58.30/emartapp-webapi:latest
+docker tag emartapp-webapi:latest <host-ip>/emartapp-webapi:latest
 
 # Push to HTTPS registry
-docker push 192.168.58.30/emartapp-client:latest
-docker push 192.168.58.30/emartapp-api:latest
-docker push 192.168.58.30/emartapp-webapi:latest
+docker push <host-ip>/emartapp-client:latest
+docker push <host-ip>/emartapp-api:latest
+docker push <host-ip>/emartapp-webapi:latest
 
 ### Swarm Deployment with HTTPS Registry
 # Deploy stack with registry authentication
@@ -529,7 +529,7 @@ openssl req -new -x509 -days 3650 -key /etc/ssl/ca/private/ca-key.pem -sha256 -o
 openssl genrsa -out /etc/ssl/certs/registry-key.pem 4096
 
 # Create certificate signing request (CSR)
-openssl req -subj "/C=US/ST=State/L=City/O=Organization/OU=IT Department/CN=192.168.58.30" -sha256 -new -key /etc/ssl/certs/registry-key.pem -out /tmp/registry.csr
+openssl req -subj "/C=US/ST=State/L=City/O=Organization/OU=IT Department/CN=<host-ip>" -sha256 -new -key /etc/ssl/certs/registry-key.pem -out /tmp/registry.csr
 
 # Create extensions file for SAN (Subject Alternative Names)
 cat > /tmp/registry-extensions.cnf << EOF
@@ -541,7 +541,7 @@ subjectAltName = @alt_names
 [alt_names]
 DNS.1 = registry.local
 DNS.2 = localhost
-IP.1 = 192.168.58.30
+IP.1 = <host-ip>
 IP.2 = 127.0.0.1
 EOF
 
@@ -580,18 +580,18 @@ curl -I https://<host-ip>
 
 ### Step 4: Verify SSL Certificate Setup
 # Test certificate chain
-openssl s_client -connect 192.168.58.30:443 -servername 192.168.58.30 -showcerts
+openssl s_client -connect <host-ip>:443 -servername <host-ip> -showcerts
 
 # Verify certificate details
 openssl x509 -in /etc/ssl/certs/registry-cert.pem -text -noout
 
 # Test Docker registry access
-docker login 192.168.58.30
+docker login <host-ip>
 
 # Test image pull/push
 docker pull hello-world
-docker tag hello-world 192.168.58.30/hello-world:test
-docker push 192.168.58.30/hello-world:test
+docker tag hello-world <host-ip>/hello-world:test
+docker push <host-ip>/hello-world:test
 
 ### Certificate Validation Commands
 # Check certificate expiration
@@ -604,7 +604,7 @@ openssl verify -CAfile /etc/ssl/ca/certs/ca-cert.pem /etc/ssl/certs/registry-cer
 openssl x509 -in /etc/ssl/certs/registry-cert.pem -noout -subject -ext subjectAltName
 
 # Test SSL connection
-openssl s_client -connect 192.168.58.30:443 -verify_return_error
+openssl s_client -connect <host-ip>:443 -verify_return_error
 ```
 ### Security Best Practices
 - Use strong passwords for CA private key
@@ -720,20 +720,20 @@ Multi-service e-commerce application with Angular frontend, Node.js API, Java AP
 docker compose build
 
 # Tag images for private registry
-docker tag emartapp-client:latest 192.168.58.30/emartapp-client:latest
-docker tag emartapp-nodeapi:latest 192.168.58.30/emartapp-api:latest
-docker tag emartapp-javaapi:latest 192.168.58.30/emartapp-webapi:latest
-docker tag mongo:4 192.168.58.30/mongo:4
-docker tag mysql:8.0.33 192.168.58.30/mysql:8.0.33
-docker tag nginx:1.21 192.168.58.30/nginx:1.21
+docker tag emartapp-client:latest <host-ip>/emartapp-client:latest
+docker tag emartapp-nodeapi:latest <host-ip>/emartapp-api:latest
+docker tag emartapp-javaapi:latest <host-ip>/emartapp-webapi:latest
+docker tag mongo:4 <host-ip>/mongo:4
+docker tag mysql:8.0.33 <host-ip>/mysql:8.0.33
+docker tag nginx:1.21 <host-ip>/nginx:1.21
 
 # Push images to private registry
-docker push 192.168.58.30/emartapp-client:latest
-docker push 192.168.58.30/emartapp-api:latest
-docker push 192.168.58.30/emartapp-webapi:latest
-docker push 192.168.58.30/mongo:4
-docker push 192.168.58.30/mysql:8.0.33
-docker push 192.168.58.30/nginx:1.21
+docker push <host-ip>/emartapp-client:latest
+docker push <host-ip>/emartapp-api:latest
+docker push <host-ip>/emartapp-webapi:latest
+docker push <host-ip>/mongo:4
+docker push <host-ip>/mysql:8.0.33
+docker push <host-ip>/nginx:1.21
 
 ### Step 2: Prepare Swarm Environment
 # Create Persistance Volume for Databases
