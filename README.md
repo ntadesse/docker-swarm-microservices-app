@@ -23,6 +23,7 @@
 
 ### Architecture Diagram
 
+```
                     ┌────────────────────────────┐
                     │   REGISTRY VM (CentOS)     │
                     │   192.168.58.30            │
@@ -81,6 +82,7 @@
               │  • Grafana Data                │
               │  • Elasticsearch Data          │
               └────────────────────────────────┘
+```
 
 ### Component Flow
 User → Nginx (Registry VM) → Nexus Registry → Docker Swarm
