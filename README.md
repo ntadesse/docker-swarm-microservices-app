@@ -83,29 +83,6 @@
               │  • Elasticsearch Data          │
               └────────────────────────────────┘
 ```
-
-### Component Flow
-User → Nginx (Registry VM) → Nexus Registry → Docker Swarm
-                                            ↓
-                                   EmartApp Services (Workers)
-                                            ↓
-                                   MongoDB/MySQL (Managers)
-                                            ↓
-                                   CephFS Storage (All Nodes)
-
-### Monitoring & Logging
-All Nodes → Node Exporter/cAdvisor → Prometheus → Grafana
-All Containers → Fluent-Bit → Elasticsearch → Kibana
-
-### Management
-Portainer (Manager1) → Docker Swarm API → All Services
-
-### Registry VM
-Separate CentOS VM (<host-ip>) running Nexus + Nginx
-Not part of Docker Swarm cluster
-Provides private Docker registry for all swarm nodes
-
-
 ### Step 1: Prepare Nodes
 ```bash
 # Provision VMs and install Docker Engine on all nodes
