@@ -303,7 +303,7 @@ https://<manager-node-ip>:9443
 # 1. Create admin user and password
 # 2. Select "Docker Swarm" environment
 # 3. Connect to local Swarm cluster
-
+```
 ### Portainer Features
 - Stack deployment and management
 - Service scaling and updates
@@ -313,9 +313,7 @@ https://<manager-node-ip>:9443
 - User and team management
 - Webhook notifications
 
-
 ## 3. Monitoring Stack - Prometheus, Grafana, Node Exporter, cAdvisor
-
 ### Monitoring Overview
 - Prometheus: Metrics collection and storage
 - Grafana: Visualization and dashboards
@@ -330,15 +328,14 @@ https://<manager-node-ip>:9443
 - cAdvisor: CPU, memory, network, filesystem per container
 - Docker Swarm: Service replicas, task states, node status
 
-
 ## 4. Logging Stack - EFK (Elasticsearch, Fluent-Bit, Kibana)
-
 ### Logging Overview
 - Elasticsearch: Log storage and search engine
 - Fluent-Bit: Lightweight log collection and forwarding
 - Kibana: Log visualization and analysis
 
 ### Deploy EFK Stack on Docker Swarm
+```bash
 # Navigate to z_efk-docker directory
 cd z_efk-docker
 ls
@@ -354,7 +351,8 @@ docker stack deploy -c docker-compose.yml efk
 
 # Access Kibana UI:
 http://<manager-ip>:5601
-
+NB: Refer to z_efk-docker directory for complete configuration and deployment files
+```
 ### EFK Features
 - Centralized log aggregation from all containers
 - Real-time log streaming and analysis
@@ -363,10 +361,7 @@ http://<manager-ip>:5601
 - Log retention and archiving
 - Alert on log patterns
 
-NB: Refer to z_efk-docker directory for complete configuration and deployment files
-
 ## 5. Private Registry Architecture (Nexus + Nginx)
-
 ### Registry Setup Details
 - Frontend: Nginx reverse proxy with SSL/TLS termination
 - Backend: Nexus Repository Manager (Docker registry format)
@@ -375,6 +370,7 @@ NB: Refer to z_efk-docker directory for complete configuration and deployment fi
 - SSL Certificates: Proper TLS configuration for secure access
 
 ### Install Nexus Repository Manager
+```bash
 # Navigate to z_nexus directory
 cd z_nexus
 
@@ -403,8 +399,10 @@ sudo cat /opt/sonatype-work/nexus3/admin.password
 # 3. Create Docker (proxy) repository - Port: 8009
 # 4. Create Docker (group) repository - Port: 8008
 # 5. Enable Docker Bearer Token Realm in Security settings and Push to Top, unless the docker login will fail
+```
 
 ### Nginx Configuration for Registry
+```bash
 # Copy nexus.conf to nginx configuration directory
 sudo cp nexus.conf /etc/nginx/conf.d/nexus.conf
 
@@ -431,6 +429,7 @@ docker login https://192.168.58.30
 
 # Verify registry access
 docker info | grep -A 5 "Registry Mirrors"
+cat ~/.docker/config.json
 
 ### SELinux Configuration (RHEL/CentOS)
 # Install semanage if not available
@@ -463,7 +462,7 @@ NB: The Nexus configuration is Port based
   : If you only have Linux machines you can use path based, but Windows machines don't support push/pull in path based nexus configuration
   : For RHEL/CentOS, configure SELinux as shown above
   : Refer to z_nexus directory for complete installation and configuration files
-
+```
 ### Nexus Repository Configuration
 - Repository Type: Docker (hosted), Docker (Proxy) and Docker (group)
 - Docker Registry API: v2
@@ -471,26 +470,8 @@ NB: The Nexus configuration is Port based
 - Security: LDAP/Local user authentication
 - Cleanup Policies: Automated image cleanup and retention
 
-### Docker Client Configuration
-# Configure Docker daemon on all swarm nodes
-vim /etc/docker/daemon.json
-{
-  "registry-mirrors": ["https://<host-ip>"],
-  "insecure-registries": []
-}
-
-# Restart Docker service
-sudo systemctl restart docker
-
-# Login to registry (one-time setup per node)
-docker login 192.168.58.30
-# Username: <nexus-username>
-# Password: <nexus-password>
-
-# Verify login
-cat ~/.docker/config.json
-
 ### Registry Operations
+```bash
 # Build and tag for HTTPS registry
 docker build -t emartapp-client:latest ./client
 docker tag emartapp-client:latest 192.168.58.30/emartapp-client:latest
@@ -512,7 +493,7 @@ docker stack deploy -c emart-stack.yml emart --with-registry-auth
 # - Registry credentials are distributed to all swarm nodes
 # - Secure image pulls during service creation/updates
 # - Proper authentication for private image access
-
+```
 
 ### Advantages of Nexus + Nginx Setup
 - Enterprise-grade repository management
@@ -526,7 +507,7 @@ docker stack deploy -c emart-stack.yml emart --with-registry-auth
 
 
 ## 6. SSL Certificate Generation and Trust Setup
-
+```bash
 ### Step 1: Create Root Certificate Authority (CA)
 # Create CA directory structure
 mkdir -p /etc/ssl/ca/{certs,crl,newcerts,private}
@@ -622,7 +603,7 @@ openssl x509 -in /etc/ssl/certs/registry-cert.pem -noout -subject -ext subjectAl
 
 # Test SSL connection
 openssl s_client -connect 192.168.58.30:443 -verify_return_error
-
+```
 ### Security Best Practices
 - Use strong passwords for CA private key
 - Store CA private key securely (offline if possible)
@@ -633,9 +614,7 @@ openssl s_client -connect 192.168.58.30:443 -verify_return_error
 - Enable HSTS and security headers
 - Regular security audits of certificate infrastructure
 
-
 ## 7. Microservice - Docker Containerization
-
 ### Project Overview
 Multi-service e-commerce application with Angular frontend, Node.js API, Java API, MongoDB, MySQL, and Nginx reverse proxy.
 
@@ -733,7 +712,7 @@ Multi-service e-commerce application with Angular frontend, Node.js API, Java AP
 
 
 ## 8. Docker Swarm Deployment Procedure
-
+```bash
 ### Step 1: Build and Push Images to Private Registry
 # Build images locally using docker-compose
 docker compose build
@@ -808,7 +787,7 @@ docker service scale <service>=5
 # Remove and redeploy stack
 docker stack rm emart
 docker stack deploy -c emart-stack.yml emart --with-registry-auth
-
+```
 ### Stack File Configuration (emart-stack.yml)
 Key differences from docker-compose.yaml:
 - Uses overlay networks for multi-node communication
