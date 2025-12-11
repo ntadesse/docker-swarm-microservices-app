@@ -20,7 +20,7 @@
 ### Storage
 - **MicroCeph** - Simplified Ceph deployment
 - **CephFS** - Distributed filesystem for shared storage
-
+###
 ### Application Stack
 - **Angular** - Frontend framework
 - **Node.js** - Backend API (User/Shop operations)
@@ -771,3 +771,4 @@ Key differences from docker-compose.yaml:
 - Includes replica counts and update strategies
 - Health checks adapted for swarm (wget for Node.js, curl for Java)
 - Volume mounts use shared storage paths
+
